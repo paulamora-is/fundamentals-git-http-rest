@@ -516,7 +516,7 @@ Exemplo:
 | **Git** | Sistema distribuído de controle de versão |
 | **Branch** | Linha paralela de desenvolvimento |
 | **Commit** | Salva uma alteração |
-|** Merge** | Junta branches |
+| **Merge** | Junta branches |
 | **Rebase** | Reescreve histórico de commits |
 | **Fork** | Cópia independente de um repositório |
 | **Pull / Push** | Enviar ou receber alterações |

@@ -7,5 +7,5 @@ public interface IEntryDiaryData
     List<EntryModel> GetAll();
     EntryModel GetById(int id);
     void Add(EntryModel entryModel);
-    public bool Delete(EntryModel entryModel);
+    bool Delete(EntryModel entryModel);
 }
