@@ -1,6 +1,46 @@
-# 🇧🇷 README — fundamentals-git-http-rest
+# 🇧🇷 fundamentals-git-http-rest
 
-## 🚀 Introdução
+## 📖 Índice
+- [Introdução](#👩‍💻-introdução)
+  - [Instalação e Configuração do .NET](#instalação-e-configuração-do-net)
+- [Quick start](#🚀-quick-start)
+- [Run & Debug (VS Code)](#🏃‍➡️-run--debug-vs-code)
+  - [Requests e Postman (HTTPS)](#requests-e-postman-https)
+- [Estrutura do projeto e convenções REST](#🗂️-estrutura-do-projeto-e-convenções-rest)
+- [Conceitos fundamentais](#🧠-conceitos-fundamentais)
+  - [Conceitos (.NET) - SDK, Runtime, Framework, LTS e CLI](#conceitos-net---sdk-runtime-framework-lts-e-cli)
+  - [Framework](#framework)
+  - [LTS e STS](#lts-e-sts)
+  - [Versionamento Semântico](#versionamento-semantico)
+  - [Runtime](#runtime)
+  - [SDK (Software Development Kit)](#sdk-software-development-kit)
+  - [.NET CLI (Command Line Interface)](#net-cli-command-line-interface)
+  - [Estrutura de um Projeto .NET](#estrutura-de-um-projeto-net)
+  - [Arquivos de configuração (exemplos)](#arquivos-de-configuração-exemplos)
+    - [Exemplo de .csproj](#exemplo-de-csproj)
+    - [Exemplo de launchSettings.json](#exemplo-de-launchsettingsjson)
+    - [Exemplo de launch.json](#exemplo-de-launchjson)
+    - [Exemplo de tasks.json](#exemplo-de-tasksjson)
+  - [Estrutura de Pastas](#estrutura-de-pastas)
+  - [Arquivos dentro de /bin](#arquivos-dentro-de-bin)
+  - [Arquivos dentro de /obj](#arquivos-dentro-de-obj)
+- [Conceitos HTTP](#🌍-conceitos-http)
+  - [Componentes](#componentes)
+  - [Estrutura de uma requisição](#estrutura-de-uma-requisição)
+  - [Estrutura de uma resposta](#estrutura-de-uma-resposta)
+- [Conceitos REST](#🌐-conceitos-rest)
+  - [Princípios](#princípios)
+  - [Boas práticas de nomeação](#boas-práticas-de-nomeação)
+- [Formato JSON (conceito e boas práticas)](#formato-json--conceito-e-boas-práticas)
+- [HTTP Status Codes e IActionResult](#http-status-codes-e-iactionresult)
+- [Conceitos Git e Versionamento](#🧩-conceitos-git-e-versionamento)
+  - [Boas práticas](#boas-práticas)
+  - [Git — Comandos](#git--comandos)
+  - [Conceitos GitHub e GitFlow](#🌀-conceitos-github-e-gitflow)
+  - [Fluxo GitFlow Prático](#fluxo-gitflow-prático)
+- [Referências](#📖-referências)
+
+## 👩‍💻 Introdução
 
 Este repositório contém o projeto **fundamentals-git-http-rest**, criado para estudar os fundamentos de:
 
@@ -10,14 +50,103 @@ Este repositório contém o projeto **fundamentals-git-http-rest**, criado para 
 - Boas práticas de rotas, versionamento e código limpo
 - Git, GitHub e GitFlow para versionamento profissional
 
-## 🧠 Conceitos Fundamentais — SDK, Runtime, Framework, LTS e CLI
+### Instalação e Configuração do .NET
 
-### 🧩 Framework
+| Etapa | Comando/Ação | Observação |
+|---|---|---|
+| Verificar se tem .NET	| `dotnet --version` | Mostra a versão instalada |
+| Instalar via CMD | `winget install Microsoft.DotNet.SDK.9` | Instala o SDK 9 |
+| Instalar via site | [Download oficial](https://dotnet.microsoft.com/pt-br/download/dotnet/9.0) | Método visual |
+| Confirmar instalação | `dotnet --info` | Exibe detalhes do SDK |
+
+## 🚀 Quick start
+
+1. Abra a pasta do projeto no VS Code:
+   c:\Users\... \fundamentals-git-http-rest
+2. Restaurar dependências e compilar:
+   ```bash
+   dotnet restore
+   dotnet build
+   ```
+3. Executar localmente (fora do debug):
+   ```bash
+   cd fundamentals.git.http.rest.api
+   dotnet run --urls "https://localhost:7070;http://localhost:5199"
+   ```
+4. Endpoints principais:
+   - GET /api/entries
+   - GET /api/entries/{id}
+   - POST /api/entries
+   - PUT /api/entries/{id}
+   - DELETE /api/entries/{id}
+
+## 🏃‍➡️ Run & Debug (VS Code)
+
+Recomendações para debugar e garantir que a API seja exposta nas portas desejadas:
+
+1. Em Program.cs verifique:
+```csharp
+var builder = WebApplication.CreateBuilder(args);
+// ... registrar services ...
+var app = builder.Build();
+
+if (app.Environment.IsDevelopment())
+{
+    app.MapOpenApi();
+    app.UseDeveloperExceptionPage();
+}
+
+app.UseHttpsRedirection();
+app.MapControllers();
+app.Run();
+```
+
+2. Atualize `.vscode/tasks.json` para construir o csproj correto (label "build") e garanta que o `preLaunchTask` do launch.json aponte para essa label.
+
+3. Em `.vscode/launch.json` defina `env.ASPNETCORE_URLS` para forçar Kestrel a escutar nas portas desejadas (ex.: "https://localhost:7070;http://localhost:5199").
+
+4. Rebuild (Ctrl+Shift+B) e inicie debug (F5). Procure no Debug Console/Terminal por:
+```
+Now listening on: https://localhost:7070
+```
+
+5. Se for a primeira vez com HTTPS local:
+```bash
+dotnet dev-certs https --trust
+```
+
+### Requests e Postman (HTTPS)
+
+- Se Postman falhar com HTTPS por certificado autoassinado:
+  - **Teste via HTTP:** http://localhost:5199/api/entries
+  - **Desativar verificação SSL no Postman:** Settings → General → "SSL certificate verification" = OFF
+  - **Ou confiar no certificado dev:** dotnet dev-certs https --trust
+- Verifique Postman Console (View → Show Postman Console) para detalhes (TLS, proxy, connection refused).
+- Se houver proxy corporativo, adicione localhost/127.0.0.1 em “No Proxy”.
+
+## 🗂️ Estrutura do projeto e convenções REST
+- **Camadas:**
+  - **Model** — definição das entidades.
+  - **Infra** — persistência / mock data.
+  - **Service** — regras de negócio.
+  - **Controller** — endpoints HTTP.
+- **Convenções:**
+  - **GET /api/entries** → lista (com filtro via query ?title=).
+  - **GET /api/entries/{id}** → por id.
+  - **POST /api/entries** → cria (retorna 201 + CreatedAtAction).
+  - **PUT /api/entries/{id}** → atualiza campos mutáveis; preserve DateCreated; atualize DateUpdate.
+  - **DELETE /api/entries/{id}** → remove (retornar 204 ou 200).
+
+## 🧠 Conceitos fundamentais 
+
+### Conceitos (.NET) - SDK, Runtime, Framework, LTS e CLI
+
+### Framework
 
 Um **framework** é um conjunto de bibliotecas, ferramentas e convenções que facilitam o desenvolvimento de software, fornecendo uma estrutura padrão para o código.
 No caso do **.NET**, ele define como aplicativos são compilados, executados e se comunicam com o sistema operacional.
 
-### 🧱 LTS e STS
+### LTS e STS
 | Tipo | Significado | Suporte | Indicado para |
 |---|---|---|---|
 | **LTS** | Sigla para Long-term support (ou suporte de longo prazo, em português), LTS é uma variação de um software cujo principal objetivo é proporcionar estabilidade por longos períodos aos usuários.Opte sempre por LTS para projetos em produção; |	3 anos | Produção (estável) |
@@ -30,7 +159,7 @@ No caso do **.NET**, ele define como aplicativos são compilados, executados e s
 - .NET 9 → STS (lançado em novembro/2024, fim em maio/2026).
 - E assim sucessivamente: versões ímpares tendem a ser STS, enquanto as pares são LTS.
 
-### 🧭 Versionamento Semântico
+### Versionamento Semântico
 
 Definido por Versão Semântica dividida em fases: Alpha (esboço), Beta (versão de testes), Release Candidate (versão cândida para ser versão final da aplicação), Final;
 
@@ -42,7 +171,7 @@ O .NET segue o padrão **MAJOR.MINOR.PATCH**, ex: 9.0.1
 | **MINOR** | (0) | Mudanças pequenas na aplicação. Possui mudanças, mas é totalmente compatível com versões anteriores - Backward Compatibility. |
 | **PATCH** | (1) |	Correção de bugs e outros itens simples. |
 
-### ⚙️ Runtime 
+### Runtime 
 
 O **.NET Runtime** é o ambiente onde o aplicativo **.NET** realmente é executado.
 Ele fornece os componentes necessários para rodar o código compilado (assemblies `.dll`, `.exe`) — como gerenciamento de memória, coleta de lixo (garbage collector), e JIT (Just-In-Time Compilation).
@@ -52,12 +181,12 @@ São divididos em três:
 - .NET Core para qualquer outra aplicação: console, batch, serviço;
 - Não possui uma interface
 
-### 🧰 SDK (Software Development Kit)
+### SDK (Software Development Kit)
 
 O **.NET SDK** inclui o runtime, o compilador `dotnet`, modelos de projeto (templates), ferramentas de build e o **CLI (Command Line Interface)**.
 Ou seja, o SDK é o pacote completo para desenvolver e executar projetos .NET.
 
-### ⚙️ .NET CLI (Command Line Interface)
+### .NET CLI (Command Line Interface)
 
 A **CLI** é o terminal do .NET — você cria, compila e executa projetos com comandos.
 
@@ -66,45 +195,7 @@ A **CLI** é o terminal do .NET — você cria, compila e executa projetos com c
 - `dotnet —list-runtimes`: lista os runtimes instalados;
 - `dotnet help`: exibe ajuda e lista de comandos disponíveis.
 
-## ⚙️ Instalação e Configuração do .NET
-
-### Etapas para instalação
-
-| Etapa | Comando/Ação | Observação |
-|---|---|---|
-| Verificar se tem .NET	| `dotnet --version` | Mostra a versão instalada |
-| Instalar via CMD | `winget install Microsoft.DotNet.SDK.9` | Instala o SDK 9 |
-| Instalar via site | Download oficial | Método visual |
-| Confirmar instalação | `dotnet --info` | Exibe detalhes do SDK |
-
-### Etapas para criação do projeto
-| Etapa | Comando/Ação | Observação |
-|---|---|---|
-| Criar projeto | `dotnet new webapi -n fundamentals-git-http-rest` | Cria API base |
-| Compilar o código | `dotnet build` |
-| Executar projeto | `dotnet run` |	Roda o servidor local |
-
-### Outros comandos
-| Etapa | Comando/Ação |
-|---|---|
-| Limpa arquivos de build | `dotnet clean` |
-| Executa testes | `dotnet test` |
-| Restaura dependências | `dotnet restore` |
-| Gera versão para deploy |  `dotnet publish -c Release` |
-
-
-### 🔄 Fluxo de execução básico
-```bash
-dotnet new webapi -n fundamentals-git-http-rest
-cd fundamentals-git-http-rest
-dotnet build
-dotnet run
-```
-
-**Fluxo**:
-1️⃣ Cria → 2️⃣ Compila → 3️⃣ Executa → 4️⃣ API roda em `https://localhost:5001`
-
-## 🏗️ Estrutura de um Projeto .NET
+### Estrutura de um Projeto .NET
 
 Cada aplicação criada no dotnet precisa especificar o tipo de projeto e tem resultados finais diferentes.
 
@@ -117,37 +208,116 @@ Cada aplicação criada no dotnet precisa especificar o tipo de projeto e tem re
 | 💻 Console | `dotnet new console -n Tools` | o resultado final é uma aplicação que roda no terminal e pode receber dados, esperar input do usuário | Jobs, scripts, utilitários |
 | 🖥️ Blazor / MVC / Worker | `dotnet new blazorserver -n WebApp`	| Interfaces e processos em background |
 
-### 📘 Arquivos Importantes (.sln, .csproj, launch.json)
-
+### Arquivos de configuração (exemplos)
 | Arquivo |	Função |
 |---|---|
 | `.sln` (Solution) |	Agrupa múltiplos projetos (.csproj). |
 | `.csproj` | Define dependências, SDK usado, frameworks e pacotes NuGet. |
 | `launchSettings.json` |	Configura o modo de execução local e ambiente (Development, Production). |
 | `launch.json` | Arquivo do VS Code para debug do .NET. |
+| `tasks.json` | O arquivo fica dentro da pasta .vscode/ e serve para definir tarefas automáticas que o VS Code executa antes de iniciar o debug, como compilar o projeto .NET. |
 
-### 🧩 Exemplo de launch.json
+### Exemplo de .csproj
+
+```xml
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>fundamentals_git_http_rest_api</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.10" />
+  </ItemGroup>
+
+</Project>
+```
+| Campo / Elemento | Função |
+|---|---|
+| `Project Sdk="Microsoft.NET.Sdk.Web"` | Declara o SDK usado pelo projeto (aqui: projeto Web ASP.NET). |
+| `PropertyGroup` | Agrupa propriedades de build e configuração do projeto. |
+| `TargetFramework` | Framework alvo do projeto (ex.: net9.0). |
+| `Nullable` | Controla nullability annotations (enable/disable). |
+| `ImplicitUsings` | Habilita usings implícitos gerados pelo SDK. |
+| `RootNamespace` | Namespace raiz usado no projeto (opcional). |
+| `ItemGroup` | Agrupa itens do projeto (dependências, referências, arquivos). |
+| `PackageReference Include / Version` | Declara dependência NuGet (pacote e versão). |
+
+
+### Exemplo de launchSettings.json
+```json
+    {
+  "$schema": "https://json.schemastore.org/launchsettings.json",
+  "profiles": {
+    "http": {
+      "commandName": "Project",
+      "dotnetRunMessages": true,
+      "launchBrowser": false,
+      "applicationUrl": "http://localhost:5199",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      }
+    },
+    "https": {
+      "commandName": "Project",
+      "dotnetRunMessages": true,
+      "launchBrowser": false,
+      "applicationUrl": "https://localhost:7070;http://localhost:5199",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      }
+    }
+  }
+}
+```
+
+| Campo | Função |
+|---|---|
+| `$schema` | Referência ao schema JSON (validação/edição assistida). |
+| `profiles` | Objeto que agrupa perfis de execução (cada chave é um perfil) |
+| `<perfil>` (ex: http / https) | Nome do perfil com suas configurações específicas (commandName, applicationUrl, etc.). |
+| `commandName` | Tipo de execução local ("Project", "IISExpress", "Executable"). |
+| `dotnetRunMessages` | Quando true, exibe mensagens detalhadas do `dotnet run` no console. |
+| `launchBrowser` | Se true, abre um navegador ao iniciar (quando aplicável). |
+| `launchUrl` | Caminho relativo a abrir no navegador (quando launchBrowser = true) |
+| `applicationUrl` | URLs que a aplicação irá escutar localmente (separadas por `;`). |
+| `environmentVariables` | Objeto com variáveis de ambiente para o perfil |
+| `ASPNETCORE_ENVIRONMENT` | Variável que define o ambiente da aplicação (Development/Production) |
+| `sslPort` | Porta SSL usada pelo IIS Express (quando aplicável) |
+| `iisSettings` | Configurações específicas do IIS Express (sslPort, autenticação, etc.) |
+| `executablePath / program` | Caminho do executável (usado em perfis tipo Executable) |
+| `workingDirectory` | Diretório de trabalho ao iniciar a aplicação |
+| `env (ou environmentVariables)` | Pode conter outras variáveis de ambiente específicas do perfil |
+
+### Exemplo de launch.json
 
 ```json
 {
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Launch fundamentals-git-http-rest (net9.0)",
+      "name": "Launch fundamentals-git-http-rest-api (net9.0)",
       "type": "coreclr",
       "request": "launch",
       "preLaunchTask": "build",
-      "program": "${workspaceFolder}/bin/Debug/net9.0/fundamentals-git-http-rest.dll",
-      "cwd": "${workspaceFolder}",
+      "program": "${workspaceFolder}/fundamentals.git.http.rest.api/bin/Debug/net9.0/fundamentals-git-http-rest-api.dll",
+      "cwd": "${workspaceFolder}/fundamentals.git.http.rest.api",
       "args": [],
       "env": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "ASPNETCORE_URLS": "https://localhost:7070;http://localhost:5199"
       },
       "console": "integratedTerminal",
       "stopAtEntry": false,
       "serverReadyAction": {
         "action": "openExternally",
         "pattern": "\\bNow listening on:\\s+(https?://\\S+)"
+      },
+      "sourceFileMap": {
+        "/Views": "${workspaceFolder}/fundamentals.git.http.rest.api/Views"
       }
     }
   ]
@@ -161,76 +331,60 @@ Cada aplicação criada no dotnet precisa especificar o tipo de projeto e tem re
 | `name` | Nome legível da configuração exibido no VS Code. |
 | `type` | Tipo do depurador (ex: "coreclr" para .NET). |
 | `request` | Tipo de ação: "launch" (inicia processo) ou "attach" (anexa a processo). |
+| `preLaunchTask` | Tarefa do VS Code a ser executada antes (ex: build). |
 | `program` | Caminho para o executável/.dll a ser executado (quando request = "launch"). |
-| `cwd` | Diretório de trabalho ao iniciar a aplicação. |
+| `cwd` | Diretório de trabalho ao iniciar a aplicação (normalmente pasta do projeto). |
 | `args` | Argumentos passados para a aplicação no lançamento. |
 | `env / envFile` | Variáveis de ambiente (objeto `env` ou arquivo `.env`). |
-| `preLaunchTask` | Tarefa do VS Code a ser executada antes (ex: build). |
-| `stopAtEntry` | Se true, pausa no início da execução. |
+| `ASPNETCORE_URLS (em env)` | Força o Kestrel a escutar nas URLs/portas especificadas durante o debug. |
 | `console` | Onde a saída aparece (internalConsole, integratedTerminal, externalTerminal). |
+| `stopAtEntry` | Se true, pausa no início da execução. |
 | `serverReadyAction` | Automatiza ação quando servidor está pronto (ex: abrir browser em URL). |
-| `launchBrowser` | Configuração para abrir navegador automaticamente (frequentemente via serverReadyAction). |
+| `sourceFileMap` | Mapeamento de caminhos fonte (útil para views/source externos). 
 
-### 🧩 Exemplo de .csproj
 
-```xml
-<Project Sdk="Microsoft.NET.Sdk.Web">
-  <PropertyGroup>
-    <TargetFramework>net9.0</TargetFramework>
-    <Nullable>enable</Nullable>
-    <ImplicitUsings>enable</ImplicitUsings>
-  </PropertyGroup>
+### Exemplo de tasks.json
 
-  <ItemGroup>
-    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0" />
-  </ItemGroup>
-</Project>
-```
-| Campo | Função |
-|---|---|
-| `Project Sdk="Microsoft.NET.Sdk.Web"` | Define o SDK usado pelo projeto; aqui indica projeto Web (ASP.NET). |
-| `PropertyGroup` | Bloco que agrupa propriedades de build/compilação (TargetFramework, Nullable, etc.). |
-| `TargetFramework` | Define a framework alvo (ex: net9.0). Controle de versão do runtime alvo. |
-| `Nullable` | Controla o recurso de reference nullability (enable/disable). |
-| `ImplicitUsings` | Habilita usings implícitos gerados automaticamente pelo SDK. |
-| `ItemGroup` | Bloco que agrupa itens do projeto: PackageReference, ProjectReference, Compile, None, etc. |
-| `PackageReference Include / Version` | Declara dependência NuGet (nome do pacote e versão). |
-
-### 🧩 Exemplo de launchSettings.json
-```json
+```json 
+{
+  "version": "2.0.0",
+  "tasks": [
     {
-        "profiles": {
-            "fundamentals-git-http-rest": {
-            "commandName": "Project",
-            "dotnetRunMessages": true,
-            "launchBrowser": true,
-            "applicationUrl": "https://localhost:5001;http://localhost:5000",
-            "environmentVariables": {
-                "ASPNETCORE_ENVIRONMENT": "Development"
-                }
-            }
-        }
+      "label": "build",
+      "type": "process",
+      "command": "dotnet",
+      "args": [
+        "build",
+        "${workspaceFolder}/fundamentals.git.http.rest.api/fundamentals-git-http-rest-api.csproj",
+        "-c",
+        "Debug"
+      ],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "problemMatcher": "$msCompile",
+      "presentation": {
+        "reveal": "silent",
+        "panel": "shared"
+      }
     }
+  ]
+}
 ```
-
-| Campo | Função |
+| Campo |	Função |
 |---|---|
-| `profiles` | Objeto que agrupa perfis de execução (cada chave é um perfil) |
-| `<perfil>` (ex: fundamentals-git-http-rest) | Nome do perfil com suas configurações específicas |
-| `commandName` | Tipo de execução: "Project" / "IISExpress" / "Executable" | "Project" |
-| `dotnetRunMessages` | Habilita mensagens detalhadas do `dotnet run` no console |
-| `launchBrowser` | Indica se o navegador deve abrir automaticamente ao iniciar |
-| `launchUrl` | Caminho relativo a abrir no navegador (quando launchBrowser = true) |
-| `applicationUrl` | URLs que a aplicação irá escutar (separadas por `;`) |
-| `environmentVariables` | Objeto com variáveis de ambiente para o perfil |
-| `ASPNETCORE_ENVIRONMENT` | Variável que define o ambiente da aplicação (Development/Production) |
-| `sslPort` | Porta SSL usada pelo IIS Express (quando aplicável) |
-| `iisSettings` | Configurações específicas do IIS Express (sslPort, autenticação, etc.) |
-| `executablePath / program` | Caminho do executável (usado em perfis tipo Executable) |
-| `workingDirectory` | Diretório de trabalho ao iniciar a aplicação |
-| `env (ou environmentVariables)` | Pode conter outras variáveis de ambiente específicas do perfil |
+| `"version"` | Versão do formato de tasks (ex: "2.0.0"). |
+| `"tasks"` | Array de tarefas que o VS Code pode executar. |
+| `"label"` |	 Nome da tarefa (referenciado por preLaunchTask do launch.json). |
+| `"type"` | Tipo da tarefa (ex.: "process" executa um comando). |
+| `"command"` |	Comando a ser executado (ex.: "dotnet"). |
+| `"args"` |	Argumentos do comando (ex.: ["build","<caminho.csproj>","-c","Debug"]) |
+| `"group"` |	 Define categoria (ex.: { "kind": "build", "isDefault": true }). |
+| `"problemMatcher"` |	Diz ao VS Code como interpretar erros do compilador |
+| `"presentation"` | Controle de como a saída da task é apresentada (panel, reveal, etc.). |
 
-## 🗂️ Estrutura de Pastas
+### Estrutura de Pastas
 
 | Pasta / Arquivo |	Função
 |---|---|
@@ -241,7 +395,7 @@ Cada aplicação criada no dotnet precisa especificar o tipo de projeto e tem re
 |` appsettings.Development.json` | Configurações específicas do ambiente de desenvolvimento |
 | `.gitignore` | Define o que o Git deve ignorar (bin, obj, secrets, etc.) |
 
-### 🧩 Arquivos dentro de /bin
+### Arquivos dentro de /bin
 | Arquivo |	Função |
 |---|---|
 | `.dll` |	Código compilado |
@@ -250,7 +404,7 @@ Cada aplicação criada no dotnet precisa especificar o tipo de projeto e tem re
 | `.runtimeconfig.json` |	Define o runtime .NET necessário |
 | `.deps.json` |	Lista dependências do projeto |
 
-### 🧩 Arquivos dentro de /obj
+### Arquivos dentro de /obj
 | Arquivo |	Função |
 |---|---|
 | `.nuget.g.props / .nuget.g.targets` | Configuração de pacotes NuGet |
@@ -258,29 +412,8 @@ Cada aplicação criada no dotnet precisa especificar o tipo de projeto e tem re
 | `project.nuget.cache` |	Cache de pacotes |
 | `.dgspec.json` | Especificações de build |
 
-## 🧩 Namespaces, Usings e Runtime
 
-- **namespace** → Agrupa classes relacionadas logicamente (como pacotes).
-- **using** → Importa outros namespaces.
-- **runtime** → É o ambiente de execução do .NET (CoreCLR).
-
-## 🪲 Depuração (Debug) no VS Code
-
-Para habilitar o debug:
-
-1. Instale as extensões:
-
-- ✅ C# Dev Kit
-- ✅ .NET Install Tool
-- ✅ NuGet Gallery
-
-2. Gere o arquivo de debug:
-`dotnet build`
-O VS Code detectará o projeto e criará o launch.json.
-
-3. Clique em ▶️ “Run and Debug”.
-
-## 🌍 Conceitos HTTP
+### 🌍 Conceitos HTTP
 
 O **HTTP (HyperText Transfer Protocol)** é o protocolo que define como clientes (ex: navegadores) e servidores trocam informações.
 
@@ -316,16 +449,7 @@ Content-Type: application/json
 }
 ```
 
-### Métodos HTTP mais comuns
-
-| Método | Ação | Exemplo |
-|---|---|---|
-| `GET` |	Buscar dados |	/api/entries |
-| `POST` | Criar recurso |	/api/entries |
-| `PUT` |	Atualizar recurso |	/api/entries/1 |
-| `DELETE` |	Remover recurso | /api/entries/1 |
-
-## 🧭 Boas Práticas REST
+### 🌐 Conceitos REST
 
 ### Princípios:
 
@@ -344,26 +468,27 @@ Content-Type: application/json
 | **Atualizar**| PUT | /api/entries/{id} |
 | **Deletar**|	DELETE | /api/entries/{id} |
 
-### 🧱 Camadas do Projeto
+### Formato JSON — conceito e boas práticas
+**JSON (JavaScript Object Notation)** é um formato leve baseado em texto para troca de dados.
+- **Estruturas:** object { "key": value }, array [ ... ].
+- **Tipos:** string, number, boolean, null, array, object.
+- **Datas:** use ISO 8601 (ex.: "2025-12-22" ou "2025-12-22T15:30:00Z"); JSON não tem tipo date nativo.
+- **Regras práticas:**
+  - **Enviar header:** Content-Type: application/json.
+  - Evitar propriedades desnecessárias.
+  - Servidor pode preencher/idificar campos (id, dateCreated).
+  - Para APIs públicas, documente o contrato JSON (ex.: via OpenAPI/Swagger).
 
-| Camada |	Função |
-|---|---|
-| **Model** | Estrutura dos dados |
-| **Infra** | Acesso a dados (banco, API externa, mock) |
-| **Service** |	Regras de negócio |
-| **Controller** |	Recebe requisições HTTP e retorna respostas |
-| **Program.cs** |	Configurações globais e inicialização da API |
+Exemplo:
+```json
+{
+  "title": "Testing the complete API",
+  "content": "Adding the first entry via postman",
+  "dateCreated": "2025-12-22"
+}
+```
 
-### 🎯 Controllers, Rotas e Parâmetros
-
-| Tipo | Exemplo | Uso |
-|---|---|---|
-| [FromRoute] |	/entries/5 | Identificação direta do recurso |
-| [FromQuery] |	/entries?title=abc | Filtros e ordenação |
-| [FromHeader] | Authorization: Bearer | Autenticação e cache |
-| [FromBody] | JSON no corpo | Envio de dados (POST, PUT) |
-
-### 📬 HTTP Status Codes e IActionResult
+###  HTTP Status Codes e IActionResult
 
 | Situação | Código | Método |
 |---|---:|---|
@@ -383,19 +508,8 @@ Content-Type: application/json
 | `BadRequest()` | `BadRequestObjectResult` | Dados inválidos |
 | `NotFound()` | `NotFoundResult` | Recurso ausente |
 
-### 🏗️ Explicação do CreatedAtAction
 
-```csharp
-return CreatedAtAction(nameof(GetById), new { id = entryModel.Id }, entryModel);
-```
-
-| Parâmetro | Função |
-|---|---|
-| `nameof(GetById)` | Indica o método que pode ser usado para buscar o recurso criado |
-| `new { id = entryModel.Id }` | Valores de rota |
-| `entryModel` | Objeto criado retornado no corpo da resposta |
-
-## 🧩 Git e Versionamento
+### 🧩 Conceitos Git e Versionamento
 
 | Conceito | Descrição |
 |---|---|
@@ -413,7 +527,7 @@ return CreatedAtAction(nameof(GetById), new { id = entryModel.Id }, entryModel);
 - Nomear branches por tipo (feature/, fix/, hotfix/)
 - Sempre revisar código via Pull Request
 
-### 🧩 Git — Comandos
+### Git — Comandos
 
 | Comando |	Descrição |
 |---|---|
@@ -429,7 +543,7 @@ return CreatedAtAction(nameof(GetById), new { id = entryModel.Id }, entryModel);
 | `git push` |	Envia alterações |
 | `git log --oneline` |	Histórico resumido |
 
-## 🌱 GitHub e GitFlow
+### 🌀 Conceitos GitHub e GitFlow
 
 **GitHub:** plataforma de hospedagem e colaboração de código.
 **GitFlow:** metodologia de versionamento com branches padronizadas.
@@ -467,3 +581,20 @@ git tag v1.0.0
 # Envia para o remoto
 git push origin main --tags
 ```
+
+## 📖 Referências
+
+Links úteis para os conceitos e ferramentas usados neste projeto:
+
+- .NET (docs) — https://learn.microsoft.com/dotnet/
+- ASP.NET Core — https://learn.microsoft.com/aspnet/core/
+- CLI do .NET (dotnet) — https://learn.microsoft.com/dotnet/core/tools/
+- Self-signed dev certificates (dotnet dev-certs) — https://learn.microsoft.com/dotnet/core/additional-tools/self-signed-development-certificate-guide
+- OpenAPI / Swagger — https://swagger.io/specification/
+- RESTful API best practices — https://restfulapi.net/
+- HTTP status codes (MDN) — https://developer.mozilla.org/en-US/docs/Web/HTTP/Status
+- JSON (formato) — https://www.json.org/json-en.html
+- Semantic Versioning — https://semver.org/
+- Git (documentação oficial) — https://git-scm.com/doc
+- GitFlow (modelo) — https://nvie.com/posts/a-successful-git-branching-model/
+- VS Code — Debugging & launch.json — https://code.visualstudio.com/docs/editor/debugging
