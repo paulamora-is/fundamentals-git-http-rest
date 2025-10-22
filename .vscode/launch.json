@@ -1,0 +1,27 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Launch fundamentals-git-http-rest-api (net9.0)",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build",
+      "program": "${workspaceFolder}/fundamentals.git.http.rest.api/bin/Debug/net9.0/fundamentals-git-http-rest-api.dll",
+      "cwd": "${workspaceFolder}/fundamentals.git.http.rest.api",
+      "args": [],
+      "env": {
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "ASPNETCORE_URLS": "https://localhost:7070;http://localhost:5199"
+      },
+      "console": "integratedTerminal",
+      "stopAtEntry": false,
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "\\bNow listening on:\\s+(https?://\\S+)"
+      },
+      "sourceFileMap": {
+        "/Views": "${workspaceFolder}/fundamentals.git.http.rest.api/Views"
+      }
+    }
+  ]
+}
